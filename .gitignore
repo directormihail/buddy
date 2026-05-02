@@ -1,0 +1,26 @@
+.env
+.env.*
+!.env.example
+
+# OpenAI key material — never commit (scheme env or local plist from sync script).
+OpenAISecrets.plist
+
+# Xcode / SwiftPM
+DerivedData/
+build/
+*.xcuserstate
+*.xcuserdatad/
+xcuserdata/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+.swiftpm/configuration/registries.json
+.swiftpm/xcode/package.xcworkspace/
+
+# macOS
+.DS_Store
+
+# Local build logs
+build.log
