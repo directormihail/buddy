@@ -2,7 +2,7 @@ import AVFoundation
 import Speech
 import SwiftUI
 
-/// First-launch flow: premium presentation, voice permissions after friendly framing.
+/// First-launch flow: kid-friendly tour, then voice permissions with clear, gentle framing.
 struct OnboardingView: View {
     var onComplete: () -> Void
 
@@ -59,7 +59,7 @@ struct OnboardingView: View {
                             endPoint: .bottomTrailing
                         )
                     )
-                Text("Quick answers")
+                Text("Big questions welcome!")
                     .font(.system(size: 11, weight: .semibold, design: .rounded))
                     .foregroundStyle(Color(hex: 0x64748B))
                     .tracking(0.3)
@@ -83,7 +83,7 @@ struct OnboardingView: View {
                     )
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Skip onboarding")
+            .accessibilityLabel("Skip the hello tour")
         }
         .padding(.horizontal, 22)
         .padding(.top, 12)
@@ -162,11 +162,13 @@ struct OnboardingView: View {
     private var stepHint: String {
         switch page {
         case 0:
-            return "Swipe for the next tip →"
+            return "Swipe to see what Buddy can do →"
         case 1:
-            return "One gesture — hold to talk, release to send."
+            return "Hold the orb while you talk — let go when you’re finished!"
         default:
-            return permissionPhase == .done ? "You're set. Tap below to open Buddy." : "Next: allow mic & speech when iOS asks."
+            return permissionPhase == .done
+                ? "You’re all set! Tap below to say hi to Buddy."
+                : "Next: we’ll ask to use the mic so Buddy can hear you. A grown-up can help tap OK."
         }
     }
 
@@ -174,36 +176,36 @@ struct OnboardingView: View {
 
     private var pageMeetBuddy: some View {
         OnboardingPageShell(pageIndex: 0, totalPages: pageCount) {
-            eyebrow("Ask anything")
-            title("There are no stupid\nquestions.")
+            eyebrow("Wonder out loud")
+            title("Every question\nis a great question.")
             bodyCopy(
-                "Buddy is a lightning-fast voice companion — tap the orb, ask whatever’s on your mind, and get a tight reply. No threads, no clutter."
+                "Buddy is your friendly robot pal. Tap the shiny orb and ask anything — homework help, weird animal facts, how stuff works, or what’s on your mind. You talk, Buddy answers in short, easy words."
             )
 
             featureRow(
                 icon: "bolt.fill",
-                title: "Seconds, not scrolls",
-                subtitle: "Short replies tuned for voice"
+                title: "Answers that keep up with you",
+                subtitle: "Quick replies you can actually hear"
             )
             featureRow(
                 icon: "bubble.left.and.bubble.right.fill",
-                title: "Talk like a human",
-                subtitle: "Hold · speak · release"
+                title: "Just use your voice",
+                subtitle: "Hold the orb, say what you’re curious about, let go"
             )
             featureRow(
                 icon: "sparkles",
-                title: "Zero homework vibe",
-                subtitle: "Quick chats, no typing marathon"
+                title: "All kinds of questions count",
+                subtitle: "Silly, serious, or “but why?” — ask them all"
             )
         }
     }
 
     private var pageHowItWorks: some View {
         OnboardingPageShell(pageIndex: 1, totalPages: pageCount) {
-            eyebrow("How it works")
-            title("Hold. Speak.\nLet go.")
+            eyebrow("Super simple")
+            title("Press, talk,\nlet go!")
             bodyCopy(
-                "Press and hold the orb while you talk. When you release, Buddy transcribes, thinks, and reads the answer aloud — like a premium push-to-talk assistant."
+                "Put your finger on the orb and keep it there while you talk. When you lift your finger, Buddy listens to what you said, thinks for a moment, and reads the answer out loud — like a walkie-talkie buddy."
             )
 
             orbPreviewCard
@@ -212,32 +214,32 @@ struct OnboardingView: View {
 
     private var pageVoicePrivacy: some View {
         OnboardingPageShell(pageIndex: 2, totalPages: pageCount, bottomInset: 140) {
-            eyebrow("Privacy")
-            title("Mic on your terms.")
+            eyebrow("You’re in charge")
+            title("The mic only\nlistens while you hold.")
             bodyCopy(
-                "We only listen while your finger is on the orb. Speech recognition turns your voice into text on-device first; nothing hits the network until you send a message."
+                "Buddy only hears you when your finger stays on the orb. Your iPhone or iPad turns what you say into text on the device first; nothing goes out until you finish talking and let go."
             )
 
             HStack(spacing: 12) {
-                privacyMiniCard(icon: "mic.fill", label: "Mic", sub: "While holding")
-                privacyMiniCard(icon: "waveform", label: "Speech", sub: "On release")
+                privacyMiniCard(icon: "mic.fill", label: "Microphone", sub: "Only while you hold")
+                privacyMiniCard(icon: "waveform", label: "Understanding words", sub: "When you let go")
             }
             .padding(.top, 4)
 
             VStack(spacing: 14) {
                 if permissionPhase == .done {
-                    primaryButton(title: "Open Buddy", showsProgress: false, disabled: false) {
+                    primaryButton(title: "Start chatting with Buddy!", showsProgress: false, disabled: false) {
                         finishOnboarding()
                     }
                 } else {
                     primaryButton(
-                        title: permissionPhase == .requesting ? "Follow the prompts…" : "Enable voice — show iOS sheet",
+                        title: permissionPhase == .requesting ? "Almost there…" : "Let’s turn on voice!",
                         showsProgress: permissionPhase == .requesting,
                         disabled: permissionPhase == .requesting
                     ) {
                         Task { await requestVoicePermissionsFlow() }
                     }
-                    Text("You’ll see Apple’s permission dialogs next — that’s normal.")
+                    Text("Your device will show a couple of permission screens from Apple — that’s normal. A grown-up can help you tap the right buttons.")
                         .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundStyle(Color(hex: 0x64748B))
                         .multilineTextAlignment(.center)
@@ -339,10 +341,10 @@ struct OnboardingView: View {
             }
 
             VStack(alignment: .leading, spacing: 6) {
-                Text("Voice orb")
+                Text("Buddy’s talk button")
                     .font(.system(size: 15, weight: .bold, design: .rounded))
                     .foregroundStyle(Color(hex: 0x1E293B))
-                Text("Hold = live mic · Release = send")
+                Text("Hold = Buddy listens · Let go = send your question")
                     .font(.system(size: 13, weight: .medium, design: .rounded))
                     .foregroundStyle(Color(hex: 0x64748B))
                     .fixedSize(horizontal: false, vertical: true)
@@ -509,7 +511,7 @@ private struct OnboardingHeroRobot: View {
                 let progress = (CGFloat(pageIndex) + 0.5) / CGFloat(max(totalPages, 1))
                 let journey = (progress - 0.5) * 14
 
-                BuddyRobotView(interactionPhase: .idle)
+                BuddyRobotView(phase: .idle, onboardingPose: .init(pageIndex: pageIndex))
                     .frame(height: robotLayoutHeight)
                     .offset(x: journey + sway, y: bob)
                     .rotationEffect(.degrees(tilt))

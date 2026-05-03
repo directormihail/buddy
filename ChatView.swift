@@ -71,7 +71,10 @@ struct ChatView: View {
                     }
                 }
 
-                BuddyRobotView(interactionPhase: phase, speakingWordPulse: voice.ttsWordPulse)
+                BuddyRobotView(
+                    phase: phase,
+                    speakingWordPulse: voice.ttsWordPulse
+                )
                     .frame(height: 430)
                     .padding(.top, 4)
 
@@ -141,13 +144,6 @@ struct ChatView: View {
                             }
                     )
                     .padding(.bottom, 18)
-
-                #if targetEnvironment(simulator)
-                Text("Tip: speech recognition is most reliable on a real iPhone.")
-                    .font(.system(size: 11, weight: .medium, design: .rounded))
-                    .foregroundStyle(Color(hex: 0x47607D).opacity(0.65))
-                    .multilineTextAlignment(.center)
-                #endif
             }
             .padding(.horizontal, 16)
         }
@@ -169,7 +165,7 @@ struct ChatView: View {
                 if phase == .speaking { phase = .idle }
             }
         }
-        .onChange(of: phase) { newPhase in
+        .buddyOnChange(of: phase) { newPhase in
             if newPhase == .idle {
                 withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
                     displayedPromptChips = PromptChipLibrary.pickHints(shortMemory)
@@ -357,10 +353,10 @@ private struct ConversationLogSheet: View {
                 .onAppear {
                     scrollToLatest(proxy: proxy)
                 }
-                .onChange(of: messages.count) { _ in
+                .buddyOnChange(of: messages.count) { _ in
                     scrollToLatest(proxy: proxy)
                 }
-                .onChange(of: messages.last?.id) { _ in
+                .buddyOnChange(of: messages.last?.id) { _ in
                     scrollToLatest(proxy: proxy)
                 }
             }

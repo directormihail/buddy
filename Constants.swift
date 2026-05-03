@@ -103,3 +103,28 @@ extension Color {
         self.init(.sRGB, red: red, green: green, blue: blue, opacity: opacity)
     }
 }
+
+// MARK: - SwiftUI onChange (iOS 16 + 17 SDK without deprecation noise)
+
+extension View {
+    /// Forwards to the iOS 17 two-parameter `onChange` when available; otherwise the iOS 16 API.
+    func buddyOnChange<V: Equatable>(of value: V, perform action: @escaping (V) -> Void) -> some View {
+        modifier(BuddyOnChangeCompatModifier(value: value, action: action))
+    }
+}
+
+private struct BuddyOnChangeCompatModifier<V: Equatable>: ViewModifier {
+    let value: V
+    let action: (V) -> Void
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if #available(iOS 17.0, *) {
+            content.onChange(of: value) { _, newValue in
+                action(newValue)
+            }
+        } else {
+            content.onChange(of: value, perform: action)
+        }
+    }
+}

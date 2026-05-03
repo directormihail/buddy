@@ -2,11 +2,82 @@ import SwiftUI
 
 /// Floating glossy robot inspired by EVE-style silhouette: separate head, torso, and fins with no visible joints.
 struct BuddyRobotView: View {
+    /// Per-page mascot acting on onboarding: arm waves, explaining tilt, bob — timed with `TimelineView`.
+    enum OnboardingMascotPose: Int, CaseIterable {
+        case welcome
+        case howItWorks
+        case privacy
+
+        init(pageIndex: Int) {
+            self = Self(rawValue: pageIndex) ?? .welcome
+        }
+
+        var primaryEmoji: String {
+            switch self {
+            case .welcome: return "😊"
+            case .howItWorks: return "🎙️"
+            case .privacy: return "🔒"
+            }
+        }
+
+        var secondaryEmoji: String {
+            switch self {
+            case .welcome: return "✨"
+            case .howItWorks: return "💬"
+            case .privacy: return "🛡️"
+            }
+        }
+
+        func leftArmExtraDegrees(at t: TimeInterval) -> Double {
+            switch self {
+            case .welcome:
+                return sin(t * 2.8) * 16
+            case .howItWorks:
+                return 20 + sin(t * 2.35) * 12
+            case .privacy:
+                return -8 + sin(t * 1.7) * 5
+            }
+        }
+
+        func rightArmExtraDegrees(at t: TimeInterval) -> Double {
+            switch self {
+            case .welcome:
+                return sin(t * 2.8 + .pi) * 16
+            case .howItWorks:
+                return sin(t * 2.8) * 10
+            case .privacy:
+                return 8 + sin(t * 1.7) * -5
+            }
+        }
+
+        func bodyTiltDegrees(at t: TimeInterval) -> Double {
+            switch self {
+            case .welcome:
+                return sin(t * 1.15) * 2.8
+            case .howItWorks:
+                return 3 + sin(t * 1.4) * 4.5
+            case .privacy:
+                return sin(t * 0.95) * 2
+            }
+        }
+
+        func extraBobPoints(at t: TimeInterval) -> CGFloat {
+            switch self {
+            case .welcome:
+                return CGFloat(sin(t * 2.25) * 6)
+            case .howItWorks:
+                return CGFloat(sin(t * 2.5) * 4)
+            case .privacy:
+                return CGFloat(sin(t * 1.05) * 3)
+            }
+        }
+    }
+
     let phase: BuddyInteractionPhase
     /// From `AVSpeechSynthesizer` word-range callbacks — drives a bounce on each spoken chunk.
     let speakingWordPulse: Int
     /// When set, Buddy plays onboarding-specific arm/body loops (does not change chat behavior).
-    let onboardingPose: BuddyOnboardingMascotPose?
+    let onboardingPose: OnboardingMascotPose?
 
     @State private var hoverLift: CGFloat = 8
     @State private var shadowPulse: CGFloat = 1.04
@@ -19,9 +90,45 @@ struct BuddyRobotView: View {
     init(
         interactionPhase: BuddyInteractionPhase,
         speakingWordPulse: Int = 0,
-        onboardingPose: BuddyOnboardingMascotPose? = nil
+        onboardingPose: OnboardingMascotPose? = nil
     ) {
         phase = interactionPhase
+        self.speakingWordPulse = speakingWordPulse
+        self.onboardingPose = onboardingPose
+    }
+
+    /// Call sites that use the label `phase` (e.g. `BuddyRobotView(phase: .idle, …)`).
+    init(
+        phase: BuddyInteractionPhase,
+        speakingWordPulse: Int = 0,
+        onboardingPose: OnboardingMascotPose? = nil
+    ) {
+        self.init(
+            interactionPhase: phase,
+            speakingWordPulse: speakingWordPulse,
+            onboardingPose: onboardingPose
+        )
+    }
+
+    /// Alternative labels used by chat: voice/chat state as separate flags (priority: speaking → listening → thinking → idle).
+    init(
+        isListening: Bool,
+        isSpeaking: Bool,
+        isThinking: Bool,
+        speakingWordPulse: Int = 0,
+        onboardingPose: OnboardingMascotPose? = nil
+    ) {
+        let resolvedPhase: BuddyInteractionPhase
+        if isSpeaking {
+            resolvedPhase = .speaking
+        } else if isListening {
+            resolvedPhase = .listening
+        } else if isThinking {
+            resolvedPhase = .processing
+        } else {
+            resolvedPhase = .idle
+        }
+        phase = resolvedPhase
         self.speakingWordPulse = speakingWordPulse
         self.onboardingPose = onboardingPose
     }
@@ -43,13 +150,13 @@ struct BuddyRobotView: View {
             startIdleHoverLoop()
             restartPhaseAnimations(for: phase)
         }
-        .onChange(of: phase) { newPhase in
+        .buddyOnChange(of: phase) { newPhase in
             restartPhaseAnimations(for: newPhase)
             if newPhase != .speaking {
                 speakWordNudge = 0
             }
         }
-        .onChange(of: speakingWordPulse) { _ in
+        .buddyOnChange(of: speakingWordPulse) { _ in
             guard phase == .speaking else { return }
             triggerSpeakWordNudge()
         }
